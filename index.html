@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,17 +74,6 @@
 
   .zone{ display:flex; flex-direction:column; gap:12px; }
   .row{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px; }
-
-  .tag{
-    display:inline-flex; align-items:center; gap:8px;
-    background: rgba(124,156,245,0.14);
-    color:#dbe3ff;
-    border:1px solid rgba(124,156,245,0.35);
-    padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600;
-  }
-  .tag .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
-  .tag .swatch.heart, .tag .swatch.diamond{ background:#ff4d6d; }
-  .tag .swatch.spade, .tag .swatch.club{ background:#a7b5ff; }
 
   .totals{ display:flex; gap:10px; flex-wrap:wrap; }
   .pill{
@@ -164,7 +154,7 @@
     border-radius:12px; padding:10px; font-size:13px; color:#d6dcff;
   }
   .log p{ margin:6px 0; }
-  .muted{ color:var(--muted); }
+  .muted{ color:#9aa3b2; }
 
   details{
     background:var(--panel);
@@ -242,8 +232,7 @@
       <div class="small" style="margin-top:8px;">
         Select level (1–6). Draw a commander (always in play). Draw <em>level</em> team cards; the last drawn becomes the <strong>Level Suit</strong>.
         Each game has 7 encounters: draw enemies in counts <em>level, level, level+1, level+1, level+2, level+2</em>, then a <strong>boss</strong>.
-        Your cards: suit-matching cards count double. Enemy cards: <em>non-suit</em> cards count double.
-        If you win a non-boss round, you may swap one enemy card with one of your team cards. Boss value = <code>rank × (3 × level)</code>.
+        Your cards: suit-matching cards count double. Enemy cards: suit-matching cards also count double (boss uses its own formula).
       </div>
     </details>
   </section>
@@ -261,7 +250,6 @@
 
   // ===== Utilities =====
   const SUITS = ['♠','♥','♣','♦'];
-  const SUIT_NAME = ['spade','heart','club','diamond'];
   const isRed = s => (s === 1 || s === 3);
   const rankLabel = (r) => (r===1?'A':r===11?'J':r===12?'Q':r===13?'K':String(r));
   const cardValue = (r) => r;
@@ -355,7 +343,8 @@
       const base=cardValue(boss.rank)+(BOSS_ADD_ONE?1:0);
       return base*(3*state.level);
     }
-    return state.enemy.reduce((a,c)=>a + cardValue(c.rank) * (c.suit!==state.levelSuit?2:1),0);
+    // Enemy doubles on suit-match (to align with simulator / your correction)
+    return state.enemy.reduce((a,c)=>a + cardValue(c.rank) * (c.suit===state.levelSuit?2:1),0);
   }
   function enemyCountForRound(r){
     const L=state.level;
@@ -367,7 +356,7 @@
 
   function renderAll(){
     roundPill.textContent = (state.round<0)?'Round —':(state.round<6?`Round ${state.round+1} of 7`:'Boss Round');
-    suitPill.innerHTML = `Suit ×2 (you) / ×2 on non-suit (enemy): <strong style="margin-left:6px">${SUITS[state.levelSuit]}</strong>`;
+    suitPill.innerHTML = `Suit ×2 (you & enemy): <strong style="margin-left:6px">${SUITS[state.levelSuit]}</strong>`;
 
     // player area
     playerRow.innerHTML='';
@@ -406,14 +395,13 @@
 
         if (state.round === 6) {
           dbl = `×${3*state.level}${BOSS_ADD_ONE?'+1':''}`;
-        } else if (c.suit !== state.levelSuit) {
-          // enemy doubles on NON-suit
+        } else if (c.suit === state.levelSuit) {
+          // enemy doubles on SUIT; also mark with SUIT tag for clarity
           dbl = '×2';
-        } else {
-          // enemy card is the level suit: no double, but mark clearly
           extra = 'SUIT';
           extraClass = 'suitmark';
         }
+        // else: non-suit — no badge
 
         const node = cardNode(c, {
           doubleBadge: dbl,
@@ -543,4 +531,5 @@
 </script>
 </body>
 </html>
+
 
